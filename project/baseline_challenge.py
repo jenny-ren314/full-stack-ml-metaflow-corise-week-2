@@ -69,6 +69,8 @@ class BaselineChallenge(FlowSpec):
     def baseline(self):
         "Compute the baseline"
 
+        print('im in baseline ~~~~~~~~~~~~~~~~~~')
+
         from sklearn.metrics import accuracy_score, roc_auc_score
 
         self._name = "baseline"
@@ -85,13 +87,20 @@ class BaselineChallenge(FlowSpec):
         # TODO: return the roc_auc_score of these predictions
         rocauc = roc_auc_score(self.valdf['label'], predictions)
 
+        print('rocauc', rocauc)
+
         self.result = ModelResult("Baseline", params, pathspec, acc, rocauc)
+        print('baseline done, going to aggregate ------------------')
         self.next(self.aggregate)
+
+        
 
     @step
     def model(self):
         # TODO: import your model if it is defined in another file.
         from model import NbowModel
+
+        print('im in model ~~~~~~~~~~~~~~~~~~')
 
         self._name = "model"
         # NOTE: If you followed the link above to find a custom model implementation,
@@ -104,11 +113,13 @@ class BaselineChallenge(FlowSpec):
         for params in self.hyperparam_set:
             # TODO: instantiate your custom model here!
             model = NbowModel(params['vocab_sz'])  # TODO: instantiate your custom model here!
-            model.fit(X=self.traindf["review"], y=self.traindf["label"])
+            model.fit(X=self.traindf["review"].values, y=self.traindf["label"].values)
             # TODO: evaluate your custom model in an equivalent way to accuracy_score.
-            acc = model.eval_acc(self.valdf["review"], self.valdf["label"])
+            acc = model.eval_acc(self.valdf["review"].values, self.valdf["label"].values)
             # TODO: evaluate your custom model in an equivalent way to roc_auc_score.
-            rocauc = model.eval_rocauc(self.valdf["review"], self.valdf["label"])
+            rocauc = model.eval_rocauc(self.valdf["review"].values, self.valdf["label"].values)
+
+            print('in model acccccccc', acc)
 
             self.results.append(
                 ModelResult(
@@ -172,7 +183,7 @@ class BaselineChallenge(FlowSpec):
         print('before appending the table to card ------------------')
         current.card.append(
             Table.from_dataframe(
-                pd.DataFrame.from_dict(
+                pd.DataFrame(
                     violin_plot_df   # TODO: What goes here to populate the Table in the card?
                 )    
                 # ,columns=["Model name", "Accuracy"]
